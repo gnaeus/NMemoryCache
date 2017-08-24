@@ -89,7 +89,7 @@ namespace NMemoryCache.ConcurrentTags
                 RemoveFromAllTagEntries(deletedEntry);
             }
 
-            AddToTagEntries(key, createdEntry);
+            AddToTagEntries(createdEntry);
         }
 
         public T GetOrAdd<T>(
@@ -108,7 +108,8 @@ namespace NMemoryCache.ConcurrentTags
 
             if (!_cacheEntries.TryGetValue(key, out actualEntry) || actualEntry.CheckIfExpired())
             {
-                createdEntry = new CacheEntry(key, tags, isSliding, lifetime, new LazyValue<T>(valueFactory));
+                createdEntry = new CacheEntry(
+                    key, tags, isSliding, lifetime, new LazyValue<T>(valueFactory));
 
                 actualEntry = GetOrAddCacheEntry(key, createdEntry);
             }
@@ -132,7 +133,8 @@ namespace NMemoryCache.ConcurrentTags
 
             if (!_cacheEntries.TryGetValue(key, out actualEntry) || actualEntry.CheckIfExpired())
             {
-                createdEntry = new CacheEntry(key, tags, isSliding, lifetime, new LazyTask<T>(taskFactory));
+                createdEntry = new CacheEntry(
+                    key, tags, isSliding, lifetime, new LazyTask<T>(taskFactory));
 
                 actualEntry = GetOrAddCacheEntry(key, createdEntry);
             }
@@ -165,13 +167,13 @@ namespace NMemoryCache.ConcurrentTags
 
             if (actualEntry == createdEntry)
             {
-                AddToTagEntries(key, createdEntry);
+                AddToTagEntries(createdEntry);
             }
             
             return actualEntry;
         }
 
-        private void AddToTagEntries(object key, CacheEntry cacheEntry)
+        private void AddToTagEntries(CacheEntry cacheEntry)
         {
             if (cacheEntry.Tags != null)
             {
@@ -179,15 +181,15 @@ namespace NMemoryCache.ConcurrentTags
 
                 foreach (object tag in cacheEntry.Tags)
                 {
-                    TagEntry tagEntry = _tagEntries.GetOrAdd(tag, _ => new TagEntry(cacheEntry, key));
+                    TagEntry tagEntry = _tagEntries.GetOrAdd(tag, _ => new TagEntry(cacheEntry));
 
-                    tagEntry.TryAdd(cacheEntry, key);
+                    tagEntry.TryAdd(cacheEntry, 0);
 
                     tagEntries.Add(tagEntry);
 
                     if (cacheEntry.IsExpired || tagEntry.IsRemoved)
                     {
-                        if (_cacheEntries.Remove(key, cacheEntry))
+                        if (_cacheEntries.Remove(cacheEntry.Key, cacheEntry))
                         {
                             cacheEntry.MarkAsExpired();
                         }
@@ -206,8 +208,8 @@ namespace NMemoryCache.ConcurrentTags
             {
                 if (tagEntry.IsActive)
                 {
-                    object key;
-                    tagEntry.TryRemove(cacheEntry, out key);
+                    byte _;
+                    tagEntry.TryRemove(cacheEntry, out _);
                 }
             }
         }
@@ -221,8 +223,8 @@ namespace NMemoryCache.ConcurrentTags
                     TagEntry tagEntry;
                     if (_tagEntries.TryGetValue(tag, out tagEntry) && tagEntry.IsActive)
                     {
-                        object key;
-                        tagEntry.TryRemove(cacheEntry, out key);
+                        byte _;
+                        tagEntry.TryRemove(cacheEntry, out _);
                     }
                 }
             }
@@ -254,10 +256,9 @@ namespace NMemoryCache.ConcurrentTags
         {
             foreach (var cachePair in tagEntry)
             {
-                object key = cachePair.Value;
                 CacheEntry cacheEntry = cachePair.Key;
                 
-                if (_cacheEntries.Remove(key, cacheEntry))
+                if (_cacheEntries.Remove(cacheEntry.Key, cacheEntry))
                 {
                     cacheEntry.MarkAsExpired();
 

@@ -55,6 +55,7 @@ namespace NMemoryCache.Benchmarks
 
             int threadCount = Environment.ProcessorCount;
 
+            Console.WriteLine(_cache.GetType().FullName);
             Console.WriteLine($"Keys: {keys}");
             Console.WriteLine($"Tags: {tags}");
             Console.WriteLine($"Tags/Key: 0 - {tagsPerKey}");

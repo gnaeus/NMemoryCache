@@ -3,18 +3,18 @@ using System.Threading;
 
 namespace NMemoryCache.ConcurrentTags
 {
-    internal class TagEntry : ConcurrentDictionary<CacheEntry, object>
+    internal class TagEntry : ConcurrentDictionary<CacheEntry, byte>
     {
         private bool _isRemoved;
         
         /// <summary>
         /// Create already not empty <see cref="TagEntry"/>.
         /// </summary>
-        public TagEntry(CacheEntry cacheEntry, object key)
+        public TagEntry(CacheEntry cacheEntry)
         {
             _isRemoved = false;
             
-            TryAdd(cacheEntry, key);
+            TryAdd(cacheEntry, 0);
         }
         
         public bool IsRemoved => Volatile.Read(ref _isRemoved);
