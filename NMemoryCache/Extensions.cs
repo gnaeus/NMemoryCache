@@ -25,8 +25,8 @@ namespace NMemoryCache
 
         public static T Get<T>(this IMemoryCache cache, object key)
         {
-            T value;
-            cache.TryGet(key, out value);
+            cache.TryGet(key, out T value);
+
             return value;
         }
 
