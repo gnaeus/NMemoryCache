@@ -29,7 +29,15 @@ namespace NMemoryCache
             _value = value;
 
             _isExpired = false;
-            _expiredTicks = (DateTime.UtcNow + lifetime).Ticks;
+
+            if (lifetime == TimeSpan.MaxValue)
+            {
+                _expiredTicks = DateTime.MaxValue.Ticks;
+            }
+            else
+            {
+                _expiredTicks = (DateTime.UtcNow + lifetime).Ticks;
+            }
         }
 
         public bool IsExpired => Volatile.Read(ref _isExpired);

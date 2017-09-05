@@ -47,6 +47,12 @@ namespace NMemoryCache
         }
 
         public static void Add<T>(
+           this IMemoryCache cache, object key, object[] tags, T value)
+        {
+            cache.Add(key, tags, false, TimeSpan.MaxValue, value);
+        }
+
+        public static void Add<T>(
             this IMemoryCache cache, object key, bool isSliding, TimeSpan lifetime, T value)
         {
             cache.Add(key, null, isSliding, lifetime, value);
@@ -55,7 +61,7 @@ namespace NMemoryCache
         public static void Add<T>(
             this IMemoryCache cache, object key, TimeSpan absoluteLifetime, T value)
         {
-            cache.Add(key, false, absoluteLifetime, value);
+            cache.Add(key, null, false, absoluteLifetime, value);
         }
 
         public static void Add<T>(
@@ -65,7 +71,13 @@ namespace NMemoryCache
                 ? absoluteExpiration - DateTime.UtcNow
                 : absoluteExpiration - DateTime.Now;
 
-            cache.Add(key, false, lifetime, value);
+            cache.Add(key, null, false, lifetime, value);
+        }
+
+        public static void Add<T>(
+           this IMemoryCache cache, object key, T value)
+        {
+            cache.Add(key, null, false, TimeSpan.MaxValue, value);
         }
 
         public static T GetOrAdd<T>(
@@ -85,6 +97,12 @@ namespace NMemoryCache
         }
 
         public static T GetOrAdd<T>(
+            this IMemoryCache cache, object key, object[] tags, Func<T> valueFactory)
+        {
+            return cache.GetOrAdd(key, tags, false, TimeSpan.MaxValue, valueFactory);
+        }
+
+        public static T GetOrAdd<T>(
             this IMemoryCache cache, object key, bool isSliding, TimeSpan lifetime, Func<T> valueFactory)
         {
             return cache.GetOrAdd(key, null, isSliding, lifetime, valueFactory);
@@ -93,7 +111,7 @@ namespace NMemoryCache
         public static T GetOrAdd<T>(
             this IMemoryCache cache, object key, TimeSpan absoluteLifetime, Func<T> valueFactory)
         {
-            return cache.GetOrAdd(key, false, absoluteLifetime, valueFactory);
+            return cache.GetOrAdd(key, null, false, absoluteLifetime, valueFactory);
         }
 
         public static T GetOrAdd<T>(
@@ -103,7 +121,13 @@ namespace NMemoryCache
                 ? absoluteExpiration - DateTime.UtcNow
                 : absoluteExpiration - DateTime.Now;
 
-            return cache.GetOrAdd(key, false, lifetime, valueFactory);
+            return cache.GetOrAdd(key, null, false, lifetime, valueFactory);
+        }
+
+        public static T GetOrAdd<T>(
+            this IMemoryCache cache, object key, Func<T> valueFactory)
+        {
+            return cache.GetOrAdd(key, null, false, TimeSpan.MaxValue, valueFactory);
         }
 
         public static Task<T> GetOrAddAsync<T>(
@@ -123,6 +147,12 @@ namespace NMemoryCache
         }
 
         public static Task<T> GetOrAddAsync<T>(
+            this IMemoryCache cache, object key, object[] tags, Func<Task<T>> taskFactory)
+        {
+            return cache.GetOrAddAsync(key, tags, false, TimeSpan.MaxValue, taskFactory);
+        }
+
+        public static Task<T> GetOrAddAsync<T>(
             this IMemoryCache cache, object key, bool isSliding, TimeSpan lifetime, Func<Task<T>> taskFactory)
         {
             return cache.GetOrAddAsync(key, null, isSliding, lifetime, taskFactory);
@@ -131,7 +161,7 @@ namespace NMemoryCache
         public static Task<T> GetOrAddAsync<T>(
             this IMemoryCache cache, object key, TimeSpan absoluteLifetime, Func<Task<T>> taskFactory)
         {
-            return cache.GetOrAddAsync(key, false, absoluteLifetime, taskFactory);
+            return cache.GetOrAddAsync(key, null, false, absoluteLifetime, taskFactory);
         }
 
         public static Task<T> GetOrAddAsync<T>(
@@ -141,7 +171,13 @@ namespace NMemoryCache
                 ? absoluteExpiration - DateTime.UtcNow
                 : absoluteExpiration - DateTime.Now;
 
-            return cache.GetOrAddAsync(key, false, lifetime, taskFactory);
+            return cache.GetOrAddAsync(key, null, false, lifetime, taskFactory);
+        }
+
+        public static Task<T> GetOrAddAsync<T>(
+            this IMemoryCache cache, object key, Func<Task<T>> taskFactory)
+        {
+            return cache.GetOrAddAsync(key, null, false, TimeSpan.MaxValue, taskFactory);
         }
 
         public static void Remove(this IMemoryCache cache, params object[] keys)
