@@ -30,6 +30,13 @@ namespace NMemoryCache
             return value;
         }
 
+        public static Task<T> GetAsync<T>(this IMemoryCache cache, object key)
+        {
+            cache.TryGetAsync(key, out Task<T> value);
+
+            return value;
+        }
+
         public static void Add<T>(
             this IMemoryCache cache, object key, object[] tags, TimeSpan absoluteLifetime, T value)
         {

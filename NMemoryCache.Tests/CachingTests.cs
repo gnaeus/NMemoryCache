@@ -6,9 +6,17 @@ using NMemoryCache.Tests.Data;
 
 namespace NMemoryCache.Tests
 {
+    // TODO: replace
+    using ComplexTestObject = Entity;
+
     [TestClass]
     public class CachingTests
     {
+        // TODO: replace
+        private IMemoryCache sut => _cache;
+        private object TestKey => _testKey;
+        private Entity testObject => _testObject;
+
         protected IMemoryCache _cache;
 
         [TestInitialize]
@@ -46,7 +54,7 @@ namespace NMemoryCache.Tests
         }
         
         [TestMethod, ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void AddAbsoluteExpirationInThePastThrowsException()
+        public void AddAbsoluteExpirationInThePast_ThrowsException()
         {
             _cache.Add(_testKey, DateTime.UtcNow.AddSeconds(-1), _testObject);
         }
@@ -161,11 +169,10 @@ namespace NMemoryCache.Tests
         [TestMethod]
         public async Task GetOrAdd_FollowinGetOrAddAsync_ReturnsTheFirstObject_AndUnwrapsTheFirstTask()
         {
-            Func<Task<Entity>> fetchAsync = () => Task.FromResult(_testObject);
-            Func<Entity> fetchSync = () => new Entity();
+            Entity actualAsync = await _cache.GetOrAddAsync(
+                _testKey, () => Task.FromResult(_testObject));
 
-            Entity actualAsync = await _cache.GetOrAddAsync(_testKey, fetchAsync);
-            Entity actualSync = _cache.GetOrAdd(_testKey, fetchSync);
+            Entity actualSync = _cache.GetOrAdd(_testKey, () => new Entity());
 
             Assert.IsNotNull(actualAsync);
             Assert.AreEqual(_testObject, actualAsync);
@@ -179,11 +186,10 @@ namespace NMemoryCache.Tests
         [TestMethod]
         public async Task GetOrAddAsync_FollowinGetOrAdd_ReturnsTheFirstObject_AndIgnoresTheSecondTask()
         {
-            Func<Task<Entity>> fetchAsync = () => Task.FromResult(new Entity());
-            Func<Entity> fetchSync = () => _testObject;
+            Entity actualSync = _cache.GetOrAdd(_testKey, () => _testObject);
 
-            Entity actualSync = _cache.GetOrAdd(_testKey, fetchSync);
-            Entity actualAsync = await _cache.GetOrAddAsync(_testKey, fetchAsync);
+            Entity actualAsync = await _cache.GetOrAddAsync(
+                _testKey, () => Task.FromResult(new Entity()));
 
             Assert.IsNotNull(actualAsync);
             Assert.AreEqual(_testObject, actualAsync);
@@ -193,5 +199,61 @@ namespace NMemoryCache.Tests
 
             Assert.AreEqual(actualAsync, actualSync);
         }
+
+        [TestMethod]
+        public void GetOrAdd_ThenGet_ReturnsCorrectType()
+        {
+            _cache.GetOrAdd(_testKey, () => _testObject);
+            var actual = _cache.Get<Entity>(_testKey);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(_testObject, actual);
+        }
+
+        [TestMethod]
+        public void GetOrAdd_ThenGetValue_ReturnsCorrectType()
+        {
+            _cache.GetOrAdd(_testKey, () => 123);
+            var actual = _cache.Get<int>(_testKey);
+            Assert.AreEqual(123, actual);
+        }
+
+        [TestMethod, ExpectedException(typeof(InvalidCastException))]
+        public void GetOrAdd_ThenGetWrongType_ThrowsException()
+        {
+            _cache.GetOrAdd(_testKey, () => _testObject);
+            var actual = _cache.Get<ApplicationException>(_testKey);
+        }
+
+        [TestMethod]
+        public async Task GetOrAddAsync_ThenGetAsync_ReturnsCorrectType()
+        {
+            await _cache.GetOrAddAsync(_testKey, () => Task.FromResult(_testObject));
+            var actual = await _cache.GetAsync<Entity>(_testKey);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(_testObject, actual);
+        }
+
+        [TestMethod]
+        public async Task GetOrAddAsync_ThenGet_ReturnsCorrectType()
+        {
+            await _cache.GetOrAddAsync(_testKey, () => Task.FromResult(_testObject));
+            var actual = _cache.Get<Entity>(_testKey);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(_testObject, actual);
+        }
+
+        [TestMethod, ExpectedException(typeof(InvalidCastException))]
+        public async Task GetOrAddAsync_ThenGetAsyncWrongType_ThrowsException()
+        {
+            await _cache.GetOrAddAsync(_testKey, () => Task.FromResult(_testObject));
+            var actual = await _cache.GetAsync<ApplicationException>(_testKey);
+        }
+        
+        [TestMethod, ExpectedException(typeof(InvalidCastException))]
+        public async Task GetOrAddAsync_ThenGetWrongType_ThrowsException()
+        {
+            await _cache.GetOrAddAsync(_testKey, () => Task.FromResult(_testObject));
+            var actual = _cache.Get<ApplicationException>(_testKey);
+        }        
     }
 }

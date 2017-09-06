@@ -7,6 +7,8 @@ namespace NMemoryCache
     {
         bool TryGet<T>(object key, out T value);
 
+        bool TryGetAsync<T>(object key, out Task<T> value);
+
         void Add<T>(object key, object[] tags, bool isSliding, TimeSpan lifetime, T value);
 
         T GetOrAdd<T>(

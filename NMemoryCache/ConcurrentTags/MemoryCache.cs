@@ -59,7 +59,34 @@ namespace NMemoryCache.ConcurrentTags
             value = cacheEntry.GetValue<T>();
             return true;
         }
-        
+
+        public bool TryGetAsync<T>(object key, out Task<T> value)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            ScheduleScanForExpiredEntries();
+
+            if (!_cacheEntries.TryGetValue(key, out CacheEntry cacheEntry))
+            {
+                value = Task.FromResult(default(T));
+                return false;
+            }
+
+            if (cacheEntry.CheckIfExpired())
+            {
+                if (_cacheEntries.Remove(key, cacheEntry))
+                {
+                    RemoveFromAllTagEntries(cacheEntry);
+                }
+
+                value = Task.FromResult(default(T));
+                return false;
+            }
+
+            value = cacheEntry.GetTask<T>();
+            return true;
+        }
+
         public void Add<T>(object key, object[] tags, bool isSliding, TimeSpan lifetime, T value)
         {
             if (key == null) throw new ArgumentNullException(nameof(key));
